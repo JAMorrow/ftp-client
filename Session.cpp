@@ -8,6 +8,7 @@
 
 #include "Session.h"
 
+using namespace std;
 /**
  * constructor
  * initialize the session.
@@ -17,13 +18,11 @@ Session::Session( int port, char ipName[] ) {
   this->authenticated = false;
   this->sock = new Socket(port); // create a socket listening to that port
 
-  //std::cout << "setup socket with port " << port << std::endl;
-
   // tell it the ip address to listen to.
   this->sd = this->sock->getClientSocket(ipName);
 
   if (this->sd == -1) {  // connection was unsuccessful
-    std::cerr << "Error: Not connected to server." << std::endl;
+    cerr << "Error: Not connected to server." << endl;
   }
 }
 
@@ -39,10 +38,28 @@ Session::~Session() {
  * Set the username for the session to a given string.
  * Whenever username is changed, isAuthenticated becomes false.
  * @param username new username for the session.
+ * @return whether the username was accepted.
  */
-void Session::setUsername(std::string username) {
+bool Session::setUsername(string username) {
+  // set our username to this username
   this->username = username;
   this->authenticated = false;
+
+  // let server know about the username.
+
+  string tmp = "USER " + username + "\n";
+  strcpy(message, tmp.c_str());
+  write(sd, message, BUFFERSIZE);
+
+  // read server's reply to the message
+  string reply = getServerReply();
+  // check if message is not 331
+  if (!serverReplyEqualsCode(reply, "331")) {
+    cerr << "Error in login." << endl;
+    return false; // error in logging in
+  } else return true;
+
+
 }
 
 
@@ -52,14 +69,35 @@ void Session::setUsername(std::string username) {
  * @param password password entered
  * @return whether or not the authentication was successful.
  */
-bool Session::authenicate(std::string password) {
+bool Session::authenticate(string password) {
   // do authentication
+  // let server know the password.
 
-  if (this->sock != NULL) { // if there is a socket connected
+  string tmp = "PASS " + password + "\0";
 
-
+  cout << "sending " << tmp << endl;
+  
+  for (int i = 0; i < BUFFERSIZE; i++) {
+    message[i] = '\0';
   }
 
+
+  char mess [BUFFERSIZE];
+  strcpy(mess, tmp.c_str());
+
+  cout << mess << endl;
+
+  write(sd, mess, tmp.length() - 1);  
+
+  // read server's reply to the message
+  string reply = getServerReply();
+  // check if message is not 331
+  if (!serverReplyEqualsCode(reply, "331")) {
+    cerr << "Error in login." << endl;
+    authenticated = false; // error in logging in
+  } else {
+    authenticated = true;
+  }
   return authenticated; // so caller knows if password was accepted
 }
 
@@ -68,7 +106,7 @@ bool Session::authenicate(std::string password) {
  * Get the username for the session.
  * @return username associated with the session.
  */
-std::string Session::getUsername() {
+string Session::getUsername() {
   return username;
 }
 
@@ -88,7 +126,7 @@ bool Session::isAuthenticated() {
  * of the server message.
  * @return a string version of the reply
  */
-std::string Session::getServerReply() {
+string Session::getServerReply() {
 
   read(sd, message, BUFFERSIZE);      // Get server's reply
 
@@ -97,12 +135,12 @@ std::string Session::getServerReply() {
   // A simple solution is to convert the message to a string, and then
   // get the substring that starts from the beginning of the string to the 
   // terminating character.
-  std::string temp(message);   // convert message to string
-  std::size_t position = temp.find("\n"); // find the end of the string
-  std::string reply = temp.substr(0, position); // create answer string.
+  string temp(message);   // convert message to string
+  size_t position = temp.find("\n"); // find the end of the string
+  string reply = temp.substr(0, position); // create answer string.
   // note: substr starts at 0, and ends at the position of the '\n'
 
-  std::cout << reply << std::endl;  // Display reply
+  cout << reply << endl;  // Display reply
 
   return reply;
 }
@@ -113,7 +151,7 @@ std::string Session::getServerReply() {
  * Compares code given by server to code entered by user.
  * @return true if a match, false if not.
  */
-bool Session::serverReplyEqualsCode(std::string reply, std::string code) {
+bool Session::serverReplyEqualsCode(string reply, string code) {
   
   // compare the 1st three characters of reply to the given code.
   if (reply.compare(0,3,code) == 0) {

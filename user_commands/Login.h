@@ -10,10 +10,14 @@
 
 #include "../Command.h"
 #include <iostream>
+#include <string>
+#include <termios.h> // for hiding password as it's typed
+#include <unistd.h>
+
 
 class Login : public Command {
 public:
-    void execute(Session *);
+    int execute(Session *);
     virtual ~Login();
 private:
 

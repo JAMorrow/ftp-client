@@ -8,9 +8,12 @@
 #ifndef SESSION_H
 #define	SESSION_H
 
+#include <cstring>
 #include <string>
+
 #include "utilities/Socket.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 #define BUFFERSIZE 1500
 
@@ -21,8 +24,8 @@ public:
   virtual ~Session();
     
   // set methods
-  void setUsername(std::string);
-  bool authenicate(std::string);
+  bool setUsername(std::string);
+  bool authenticate(std::string);
 
   // get methods
   std::string getUsername();

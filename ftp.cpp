@@ -15,6 +15,9 @@
 
   using namespace std;
 
+
+int loginToServer(Session*);
+
 /**
  * Main method of ftp.
  * Takes two command line arguments, the port to listen to and the hostname.
@@ -28,17 +31,13 @@ int main(int argc, char** argv) {
   }
       
   char * ipName = argv[1]; // hostname to connect to
-
   Dictionary dict; // contains available commands.
   Command * cmd;   // a pointer to a command object that can execute commands.
 
   /* CONNECT TO SERVER  */
 
-  Session session(PORT, ipName); // the current session of ftp.
-    
+  Session session(PORT, ipName); // the current session of ftp. 
   // check for server error
-  
-  
   //TODO: Poll for server reply
   string reply = session.getServerReply();
   // if reply does not start with 220, we got an error.
@@ -48,8 +47,9 @@ int main(int argc, char** argv) {
   }
 
   /* LOGIN PHASE */
-  
-
+  if (loginToServer(&session) == 1) { // there was an error logging in
+    return 1;
+  } // else login was successful
 
   /* COMMAND PHASE */
 
@@ -74,3 +74,25 @@ int main(int argc, char** argv) {
   return 0;
 }
 
+
+/**
+ * loginToServer
+ * login to the server with the user account and password
+ */
+int loginToServer(Session* session) {
+
+  Command* cmd = new Login; // get a login command
+  
+  if (cmd->execute(session) == 1) {
+    return 1; // error
+  }
+
+
+
+
+
+
+
+
+  return 0;
+}
