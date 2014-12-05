@@ -14,7 +14,11 @@
 #include "utilities/Socket.h"
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <unistd.h> // for fork
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <poll.h>  // to poll socket
+ 
 #define BUFFERSIZE 1500
 
 class Session {
@@ -32,6 +36,9 @@ public:
   bool isAuthenticated();
 
   // Socket access methods
+  void sendCmdToServer(std::string); // send a given string to the server
+                                       // with CRLF
+
   std::string getServerReply(); // get the current server reply, display it,
                                 // and return it as a string
 

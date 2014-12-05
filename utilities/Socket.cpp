@@ -73,71 +73,14 @@ int Socket::getClientSocket(char ipName[], int sndbufsize, bool nodelay) {
     return clientFd;
 }
 
-int Socket::getServerSocket() {
-    return getServerSocket(0, false);
-}
+int Socket::pollRecvFrom() {
 
-int Socket::getServerSocket(int rcvbufsize, bool nodelay) {
-    if (serverFd == NULL_FD) { // Server not ready
-        sockaddr_in acceptSockAddr;
+  struct pollfd pfd[1];
+  pfd[0].fd = clientFd;       // declare I'll check the data availability of sd
+  pfd[0].events = POLLRDNORM; // declare I'm interested in only reading from sd
 
-        // Open a TCP socket (an internet stream socket).
-        if ((serverFd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-            perror("Cannot open a server TCP socket.");
-            return NULL_FD;
-        }
+  // check it immediately and return a positive number if sd is readable,
+  // otherwise return 0 or a negative number
+  return poll( pfd, 1, 0 );
 
-        // Set the resuseaddr option
-        const int on = 1;
-        if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR,
-                (char *) &on, sizeof ( on)) < 0) {
-            perror("setsockopt SO_REUSEADDR failed");
-            return NULL_FD;
-        }
-
-        // Set the rcvbuf option
-        if (rcvbufsize > 0) {
-            if (setsockopt(serverFd, SOL_SOCKET, SO_RCVBUF,
-                    (char *) &rcvbufsize, sizeof ( rcvbufsize)) < 0) {
-                perror("setsockopt SO_RCVBUF failed");
-                return NULL_FD;
-            }
-        }
-
-        // Set the nodelay option
-        if (nodelay == true) {
-            const int on = 1;
-            if (setsockopt(serverFd, IPPROTO_TCP, TCP_NODELAY,
-                    (char *) &on, sizeof ( on)) < 0) {
-                perror("setsockopt TCP_NODELAY failed");
-                return NULL_FD;
-            }
-        }
-
-        // Bind our local address so that the client can send to us
-        bzero((char*) &acceptSockAddr, sizeof ( acceptSockAddr));
-        acceptSockAddr.sin_family = AF_INET; // Address Family Internet
-        acceptSockAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-        acceptSockAddr.sin_port = htons(port);
-
-        if (bind(serverFd, (sockaddr*) & acceptSockAddr,
-                sizeof ( acceptSockAddr)) < 0) {
-            perror("Cannot bind the local address to the server socket.");
-            return NULL_FD;
-        }
-
-        listen(serverFd, 5);
-    }
-
-    // Read to accept new requests
-    int newFd = NULL_FD;
-    sockaddr_in newSockAddr;
-    socklen_t newSockAddrSize = sizeof ( newSockAddr);
-
-    if ((newFd =
-            accept(serverFd, (sockaddr*) & newSockAddr, &newSockAddrSize)) < 0) {
-        perror("Cannot accept from another host.");
-        return NULL_FD;
-    }
-    return newFd;
 }

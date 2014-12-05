@@ -15,6 +15,7 @@ using namespace std;
 extern "C" {
 #include <sys/types.h>    // socket, bind
 #include <sys/socket.h>   // socket, bind, listen, inet_ntoa
+#include <sys/poll.h>     // poll
 #include <netinet/in.h>   // htonl, htons, inet_ntoa
 #include <arpa/inet.h>    // inet_ntoa
 #include <netdb.h>        // gethostbyname
@@ -32,8 +33,7 @@ public:
     ~Socket();
     int getClientSocket(char[]);
     int getClientSocket(char[], int sndbufsize, bool nodelay);
-    int getServerSocket();
-    int getServerSocket(int rcvbufsize, bool nodelay);
+    int pollRecvFrom();
 private:
     int port;
     int clientFd;

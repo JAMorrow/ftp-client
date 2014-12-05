@@ -30,6 +30,7 @@ Session::Session( int port, char ipName[] ) {
  * destructor
  */
 Session::~Session() {
+  close(this->sd);
   this->sock = NULL;
 }
 
@@ -44,22 +45,19 @@ bool Session::setUsername(string username) {
   // set our username to this username
   this->username = username;
   this->authenticated = false;
+  bool success = true;
 
-  // let server know about the username.
-
-  string tmp = "USER " + username + "\n";
-  strcpy(message, tmp.c_str());
-  write(sd, message, BUFFERSIZE);
-
+  string user = "USER " + username;
+  sendCmdToServer(user);
   // read server's reply to the message
   string reply = getServerReply();
   // check if message is not 331
   if (!serverReplyEqualsCode(reply, "331")) {
-    cerr << "Error in login." << endl;
-    return false; // error in logging in
-  } else return true;
-
-
+      cerr << "Error in login." << endl;
+      success = false;
+  }
+  
+  return success;
 }
 
 
@@ -73,26 +71,18 @@ bool Session::authenticate(string password) {
   // do authentication
   // let server know the password.
 
-  string tmp = "PASS " + password + "\0";
+  string pass = "PASS " + password;
+  sendCmdToServer(pass);
 
-  cout << "sending " << tmp << endl;
-  
-  for (int i = 0; i < BUFFERSIZE; i++) {
-    message[i] = '\0';
-  }
+  cout << "sending " << pass << endl;
 
-
-  char mess [BUFFERSIZE];
-  strcpy(mess, tmp.c_str());
-
-  cout << mess << endl;
-
-  write(sd, mess, tmp.length() - 1);  
+  // poll to see if there is a server reply
+  while (sock->pollRecvFrom() < 1) {;} // wait for reply
 
   // read server's reply to the message
   string reply = getServerReply();
   // check if message is not 331
-  if (!serverReplyEqualsCode(reply, "331")) {
+  if (serverReplyEqualsCode(reply, "530")) {
     cerr << "Error in login." << endl;
     authenticated = false; // error in logging in
   } else {
@@ -120,11 +110,39 @@ bool Session::isAuthenticated() {
 }
 
 
+
 /**
- * getServerReply
- * Prints the current server reply to console and returns a string
- * of the server message.
- * @return a string version of the reply
+ * sendCmdToServer
+ * sends a given string cmd to the server.
+ */
+void Session::sendCmdToServer(string cmd) {
+ 
+  // add CRLF to end of string
+
+  string command = cmd + "\r\n";
+
+  pid_t pid = fork();
+  // let server know about the username.
+  if (pid == 0) { // child process to check for spoof
+    strcpy(message, command.c_str());
+    write(sd, command.c_str(), command.length());
+
+    cout << "about to exit child thread..." << endl;
+    exit(0);
+  } else if (pid > 0 ) { // parent
+    int returnStatus;    
+    waitpid(pid, &returnStatus, 0);
+    cout << " child done!" << endl;
+  } else { // error in fork
+    cerr << "Fork error in Session!" << endl;
+  }
+}
+
+
+/**
+ * getServerReply Prints the current server reply to console and
+ * returns a string of the server message.  @return a string version
+ * of the reply
  */
 string Session::getServerReply() {
 
