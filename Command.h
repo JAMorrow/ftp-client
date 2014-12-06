@@ -11,9 +11,11 @@
 #include <string>
 #include "Session.h"
 
+#define ERROR 1
+
 class Command {
 public:
-    virtual void execute(Session*)=0;
+  virtual int execute(Session*, std::string = "")=0;
     virtual ~Command() { }
 private:
 

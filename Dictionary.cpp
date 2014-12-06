@@ -7,15 +7,18 @@
 
 #include "Dictionary.h"
 
+using namespace std;
+
 Dictionary::Dictionary() {
-    dict.insert(std::make_pair("login", new Login ));
+    dict.insert(make_pair("USER", new Login ));
+    dict.insert(make_pair("cd", new Cd ));
 }
 
 Dictionary::~Dictionary() {
 }
 
-Command* Dictionary::lookup(std::string key) {
-    std::map<std::string, Command*>::const_iterator iter;
+Command* Dictionary::lookup(string key) {
+    map<string, Command*>::const_iterator iter;
     iter = dict.find(key);
     if (iter != dict.end()) {
         return iter->second;

@@ -74,17 +74,14 @@ bool Session::authenticate(string password) {
 
   sendCmdToServer(password);
 
-  // poll to see if there is a server reply
-  while (sock->pollRecvFrom() > 0) {
-    // read server's reply to the message
-    string reply = getServerReply();
-    // check if reply is 530, an error
-    if (serverReplyEqualsCode(reply, "530")) {
-      cerr << "Error in login." << endl;
-      authenticated = false; // error in logging in
-    }
-
+  // read server's reply to the message
+  string reply = getServerReply();
+  // check if reply is 530, an error
+  if (serverReplyEqualsCode(reply, "530")) {
+    cerr << "Error in login." << endl;
+    authenticated = false; // error in logging in
   }
+
   
   // once there is no more input, return
   return authenticated; // so caller knows if password was accepted
@@ -108,8 +105,6 @@ bool Session::isAuthenticated() {
   return authenticated;
 }
 
-
-
 /**
  * sendCmdToServer
  * sends a given string cmd to the server.
@@ -117,7 +112,6 @@ bool Session::isAuthenticated() {
 void Session::sendCmdToServer(string cmd) {
  
   // add CRLF to end of string
-
   string command = cmd + "\r\n";
 
   pid_t pid = fork();
@@ -142,23 +136,23 @@ void Session::sendCmdToServer(string cmd) {
  */
 string Session::getServerReply() {
   string reply;
+  // poll to see if there is a server reply so we can process multiple messages.
+  while (sock->pollRecvFrom() > 0) {
+ 
+    fill_n(message, BUFFERSIZE, '\0');  // clear message for this read
+    read(sd, message, BUFFERSIZE);      // Get server's reply
 
-  // let server know about the username.
-  // clear message for this read
-  fill_n(message, BUFFERSIZE, '\0');
-  read(sd, message, BUFFERSIZE);      // Get server's reply
     // We need to find the end of the message, since it is probably shorter
     // than BUFFERSIZE.
     // A simple solution is to convert the message to a string, and then
     // get the substring that starts from the beginning of the string to the 
     // last set of terminating characters.
-  
     string temp(message);   // convert message to string
-
     size_t position = temp.find_last_of("\r\n"); // find the end of the string
     reply = temp.substr(0, position); // create answer string.
 
     cout << reply << endl;  // Display reply
+  }
 
   return reply;
 }

@@ -9,7 +9,7 @@
 
 using namespace std;
 
-int Login::execute(Session* session) {
+int Login::execute(Session* session, string unused = "") {
 
   /* SEND USERNAME */
   string username;
@@ -52,17 +52,17 @@ string Login::getPassword() {
   string password;
   cout << "Password: ";
 
-  // this code hides the password on the console window as it is typed.
-  termios oldt;
-  tcgetattr(STDIN_FILENO, &oldt);
-  termios newt = oldt;
-  newt.c_lflag &= ~ECHO;
-  tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+  // // this code hides the password on the console window as it is typed.
+  // termios oldt;
+  // tcgetattr(STDIN_FILENO, &oldt);
+  // termios newt = oldt;
+  // newt.c_lflag &= ~ECHO;
+  // tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
   cin >> password; // get password while cloaked
-  // set terminal back to normal mode.
-  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+  // // set terminal back to normal mode.
+  // tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
   // output a CRLF to keep console looking aligned
-  cout << endl;
+  //cout << endl;
   return password;
 }

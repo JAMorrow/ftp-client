@@ -12,6 +12,7 @@
 #include <string>
 #include "Command.h"
 #include "user_commands/Login.h"
+#include "user_commands/Cd.h"
 
 class Dictionary
 {

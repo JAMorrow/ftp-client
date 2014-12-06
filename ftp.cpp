@@ -7,13 +7,15 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <string>
 #include "Command.h"
 #include "Dictionary.h"
 #include "Session.h"
 
+
 #define PORT 21 // default port
 
-  using namespace std;
+using namespace std;
 
 
 int loginToServer(Session*);
@@ -52,23 +54,27 @@ int main(int argc, char** argv) {
   } // else login was successful
 
   /* COMMAND PHASE */
-
+  
   string input;    // user input
-    
-  cout << "Welcome to ftp.  Please enter a command.\n";
+    cout << "";
+    getline(cin, input);
+  while (true) {
+    input.clear(); // make sure input is empty before reading in
 
-  cin >> input; // first input
+    cout << "ftp> ";
+    getline(cin, input);
+    cout << input;
 
+    // get the cmd part of input
+    string command = input;
+    Command* cmd = dict.lookup(input.substr(0, command.find_first_of(" ")));
 
-  while (input != "exit") {
-    Command* cmd = dict.lookup(input);
-
+    cout << input << endl;
     if (cmd != NULL) {
-      cmd->execute(&session);
+      cmd->execute(&session, input);
     } else {
       cout << "Invalid command.\n";
     }
-    cin >> input;
   }
 
   return 0;
@@ -86,13 +92,6 @@ int loginToServer(Session* session) {
   if (cmd->execute(session) == 1) {
     return 1; // error
   }
-
-
-
-
-
-
-
 
   return 0;
 }
