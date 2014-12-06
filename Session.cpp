@@ -16,6 +16,7 @@ using namespace std;
 Session::Session( int port, char ipName[] ) {
   this->username = "";
   this->authenticated = false;
+  this->serverIp = ipName;
   this->sock = new Socket(port); // create a socket listening to that port
 
   // tell it the ip address to listen to.
@@ -176,4 +177,9 @@ bool Session::serverReplyEqualsCode(string reply, string code) {
   } else {
     return false;
   }
+}
+
+
+char * Session::getServerIP() {
+  return serverIp;
 }

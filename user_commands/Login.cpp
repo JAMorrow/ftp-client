@@ -15,7 +15,9 @@ int Login::execute(Session* session) {
   string username;
   // print name prompt that includes user's computer info
   // TODO get computer info
-  cout << "Name (here be comp info): " << endl;
+
+  string userString( getlogin() ); // gets the name of the user on this pc
+  cout << "Name (" << session->getServerIP() << ":" << userString << "): ";
   cin >> username;
  
   if (!session->setUsername("USER " + username)) {

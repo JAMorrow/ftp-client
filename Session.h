@@ -45,10 +45,13 @@ public:
   bool serverReplyEqualsCode(std::string, std::string); // checks if the
                                 // server's reply code matches the given code.
 
+  char * getServerIP();
+
 private:
   Socket * sock;            // socket used to communicate with the server
   int sd;                   // our client socket descriptor
   char message[BUFFERSIZE]; // array to hold messages to and from server
+  char * serverIp;     // IP of the server we're connected to.
 
 
   std::string username; // a user to be associated with the session

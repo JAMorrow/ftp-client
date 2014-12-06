@@ -81,6 +81,6 @@ int Socket::pollRecvFrom() {
 
   // check it for 2 seconds and return a positive number if sd is readable,
   // otherwise return 0 or a negative number
-  return poll( pfd, 1, 9000 );
+  return poll( pfd, 1, 1000 );
 
 }
