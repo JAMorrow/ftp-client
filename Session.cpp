@@ -47,8 +47,7 @@ bool Session::setUsername(string username) {
   this->authenticated = false;
   bool success = true;
 
-  string user = "USER " + username;
-  sendCmdToServer(user);
+  sendCmdToServer(username);
   // read server's reply to the message
   string reply = getServerReply();
   // check if message is not 331
@@ -70,24 +69,23 @@ bool Session::setUsername(string username) {
 bool Session::authenticate(string password) {
   // do authentication
   // let server know the password.
+  authenticated = true; // by default
 
-  string pass = "PASS " + password;
-  sendCmdToServer(pass);
-
-  cout << "sending " << pass << endl;
+  sendCmdToServer(password);
 
   // poll to see if there is a server reply
-  while (sock->pollRecvFrom() < 1) {;} // wait for reply
+  while (sock->pollRecvFrom() > 0) {
+    // read server's reply to the message
+    string reply = getServerReply();
+    // check if reply is 530, an error
+    if (serverReplyEqualsCode(reply, "530")) {
+      cerr << "Error in login." << endl;
+      authenticated = false; // error in logging in
+    }
 
-  // read server's reply to the message
-  string reply = getServerReply();
-  // check if message is not 331
-  if (serverReplyEqualsCode(reply, "530")) {
-    cerr << "Error in login." << endl;
-    authenticated = false; // error in logging in
-  } else {
-    authenticated = true;
   }
+  
+  // once there is no more input, return
   return authenticated; // so caller knows if password was accepted
 }
 
@@ -126,13 +124,10 @@ void Session::sendCmdToServer(string cmd) {
   if (pid == 0) { // child process to check for spoof
     strcpy(message, command.c_str());
     write(sd, command.c_str(), command.length());
-
-    cout << "about to exit child thread..." << endl;
     exit(0);
   } else if (pid > 0 ) { // parent
     int returnStatus;    
     waitpid(pid, &returnStatus, 0);
-    cout << " child done!" << endl;
   } else { // error in fork
     cerr << "Fork error in Session!" << endl;
   }
@@ -145,20 +140,24 @@ void Session::sendCmdToServer(string cmd) {
  * of the reply
  */
 string Session::getServerReply() {
+  string reply;
 
+  // let server know about the username.
+  // clear message for this read
+  fill_n(message, BUFFERSIZE, '\0');
   read(sd, message, BUFFERSIZE);      // Get server's reply
+    // We need to find the end of the message, since it is probably shorter
+    // than BUFFERSIZE.
+    // A simple solution is to convert the message to a string, and then
+    // get the substring that starts from the beginning of the string to the 
+    // last set of terminating characters.
+  
+    string temp(message);   // convert message to string
 
-  // We need to find the end of the message, since it is probably shorter
-  // than BUFFERSIZE.
-  // A simple solution is to convert the message to a string, and then
-  // get the substring that starts from the beginning of the string to the 
-  // terminating character.
-  string temp(message);   // convert message to string
-  size_t position = temp.find("\n"); // find the end of the string
-  string reply = temp.substr(0, position); // create answer string.
-  // note: substr starts at 0, and ends at the position of the '\n'
+    size_t position = temp.find_last_of("\r\n"); // find the end of the string
+    reply = temp.substr(0, position); // create answer string.
 
-  cout << reply << endl;  // Display reply
+    cout << reply << endl;  // Display reply
 
   return reply;
 }

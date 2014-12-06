@@ -17,9 +17,10 @@
 
 class Login : public Command {
 public:
-    int execute(Session *);
-    virtual ~Login();
+  int execute(Session *);
+  virtual ~Login();
 private:
+  std::string getPassword();
 
 };
 

@@ -18,41 +18,25 @@ int Login::execute(Session* session) {
   cout << "Name (here be comp info): " << endl;
   cin >> username;
  
-  // prompt for new username if this one fails
-  while (!session->setUsername(username)) {
-    cout << "Name (here be comp info): " << endl;
-    cin >> username;
+  if (!session->setUsername("USER " + username)) {
+    return ERROR;
   }
+
 
   /* SEND PASSWORD */
 
-  string password;
-  cout << "Password: ";
-  cin >> password;
-  // // this code prevents the typed password from appearing 
-  // // in the console window as it is typed for security.
-  // termios oldt;
-  // tcgetattr(STDIN_FILENO, &oldt);
-  // termios newt = oldt;
-  // newt.c_lflag &= ~ECHO;
-  // tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-
-
-  // getline(cin, password);
-
+  string password = getPassword();
 
   // give password to session to authenticate.
-  if (!session->authenticate(password)) {
+  if (!session->authenticate("PASS " + password)) {
     return ERROR; // password not authenticated.
   } // else it was authenticated successfully.
 
 
-    cout << password << endl;
- 
-    string mess;
-    cin >> mess;
-    cout << mess;
+  /* SEND SYST to server */
 
+  session->sendCmdToServer("SYST");
+  session->getServerReply();
 
   return 0;
 }
@@ -62,3 +46,21 @@ Login::~Login() {
     
 }
 
+string Login::getPassword() {
+  string password;
+  cout << "Password: ";
+
+  // this code hides the password on the console window as it is typed.
+  termios oldt;
+  tcgetattr(STDIN_FILENO, &oldt);
+  termios newt = oldt;
+  newt.c_lflag &= ~ECHO;
+  tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+
+  cin >> password; // get password while cloaked
+  // set terminal back to normal mode.
+  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+  // output a CRLF to keep console looking aligned
+  cout << endl;
+  return password;
+}
