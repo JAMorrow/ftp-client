@@ -17,12 +17,12 @@ Session::Session( int port, char ipName[] ) {
   this->username = "";
   this->authenticated = false;
   this->serverIp = ipName;
-  this->sock = new Socket(port); // create a socket listening to that port
+  this->ctrl = new Socket(port); // create a socket listening to that port
 
   // tell it the ip address to listen to.
-  this->sd = this->sock->getClientSocket(ipName);
+  this->ctrlsd = this->ctrl->getClientSocket(ipName);
 
-  if (this->sd == -1) {  // connection was unsuccessful
+  if (this->ctrlsd == -1) {  // connection was unsuccessful
     cerr << "Error: Not connected to server." << endl;
   }
 }
@@ -31,8 +31,8 @@ Session::Session( int port, char ipName[] ) {
  * destructor
  */
 Session::~Session() {
-  close(this->sd);
-  this->sock = NULL;
+  close(this->ctrlsd);
+  this->ctrl = NULL;
 }
 
 /**
@@ -87,6 +87,10 @@ bool Session::authenticate(string password) {
   return authenticated; // so caller knows if password was accepted
 }
 
+void Session::setPort(int p) {
+  this->dataport = p;
+}
+
 /**
  * getUsername
  * Get the username for the session.
@@ -118,7 +122,7 @@ void Session::sendCmdToServer(string cmd) {
   // let server know about the username.
   if (pid == 0) { // child process to check for spoof
     strcpy(message, command.c_str());
-    write(sd, command.c_str(), command.length());
+    write(ctrlsd, command.c_str(), command.length());
     exit(0);
   } else if (pid > 0 ) { // parent
     int returnStatus;    
@@ -136,24 +140,11 @@ void Session::sendCmdToServer(string cmd) {
  */
 string Session::getServerReply() {
   string reply;
+
   // poll to see if there is a server reply so we can process multiple messages.
-  while (sock->pollRecvFrom() > 0) {
- 
-    fill_n(message, BUFFERSIZE, '\0');  // clear message for this read
-    read(sd, message, BUFFERSIZE);      // Get server's reply
-
-    // We need to find the end of the message, since it is probably shorter
-    // than BUFFERSIZE.
-    // A simple solution is to convert the message to a string, and then
-    // get the substring that starts from the beginning of the string to the 
-    // last set of terminating characters.
-    string temp(message);   // convert message to string
-    size_t position = temp.find_last_of("\r\n"); // find the end of the string
-    reply = temp.substr(0, position); // create answer string.
-
-    cout << reply << endl;  // Display reply
+  while (ctrl->pollRecvFrom() > 0) {
+    reply = doRead(ctrlsd);
   }
-
   return reply;
 }
 
@@ -173,7 +164,64 @@ bool Session::serverReplyEqualsCode(string reply, string code) {
   }
 }
 
+void Session::setupDataSocket() {
+
+  this->data = new Socket(dataport); // create a socket listening to that port
+
+  // tell it the ip address to listen to.
+  this->datasd = this->data->getClientSocket(this->serverIp);
+
+  if (this->datasd == -1) {  // connection was unsuccessful
+    cerr << "Error: Not connected to server." << endl;
+  }
+
+}
+
+void Session::teardownDataSocket() {
+  close(datasd);
+  this->datasd = -1;
+
+}
+
+string Session::getDataFromServer() {
+  string reply;
+  // do a blocked read.
+  reply = doRead(datasd);
+
+  // poll to see if there is a server reply so we can process multiple messages.
+  while (data->pollRecvFrom() > 0 && reply.compare(" ") != 0) {
+    reply = doRead(datasd);
+  }
+  return reply;
+}
 
 char * Session::getServerIP() {
   return serverIp;
+}
+
+int Session::getDataPort() {
+  return dataport;
+}
+
+
+string Session::doRead(int sd) {
+  string reply;
+  fill_n(message, BUFFERSIZE, '\0');  // clear message for this read
+  read(sd, message, BUFFERSIZE);      // Get server's reply
+
+  // We need to find the end of the message, since it is probably shorter
+  // than BUFFERSIZE.
+  // A simple solution is to convert the message to a string, and then
+  // get the substring that starts from the beginning of the string to the 
+  // last set of terminating characters.
+  string temp(message);   // convert message to string
+  size_t position = temp.find_last_of("\r\n"); // find the end of the string
+  if (position == -1) {
+    // continue
+    reply = " "; // a signal to let caller know message is done.
+  } else {
+    reply = temp.substr(0, position); // create answer string.
+    cout << reply << endl;  // Display reply
+  }
+  return reply;
 }

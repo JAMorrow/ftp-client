@@ -30,6 +30,7 @@ public:
   // set methods
   bool setUsername(std::string);
   bool authenticate(std::string);
+  void setPort(int);
 
   // get methods
   std::string getUsername();
@@ -45,13 +46,27 @@ public:
   bool serverReplyEqualsCode(std::string, std::string); // checks if the
                                 // server's reply code matches the given code.
 
+
+  void setupDataSocket();
+
+  void teardownDataSocket();
+
+  std::string getDataFromServer();
+
   char * getServerIP();
 
+  int getDataPort();
+
+  std::string doRead(int);
+
 private:
-  Socket * sock;            // socket used to communicate with the server
-  int sd;                   // our client socket descriptor
+  Socket * ctrl;            // control socket used to interact with the server
+  int ctrlsd;               // our control socket descriptor
   char message[BUFFERSIZE]; // array to hold messages to and from server
-  char * serverIp;     // IP of the server we're connected to.
+  Socket * data;            // data socket used to interact with the server
+  int datasd;               // our data socket descriptor
+  char * serverIp;          // IP of the server we're connected to
+  int dataport;             // port number from PASV, -1 if not intialized.
 
 
   std::string username; // a user to be associated with the session

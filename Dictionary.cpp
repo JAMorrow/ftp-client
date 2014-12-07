@@ -12,6 +12,7 @@ using namespace std;
 Dictionary::Dictionary() {
     dict.insert(make_pair("USER", new Login ));
     dict.insert(make_pair("cd", new Cd ));
+    dict.insert(make_pair("ls", new Ls ));
 }
 
 Dictionary::~Dictionary() {
