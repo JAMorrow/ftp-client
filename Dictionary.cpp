@@ -13,6 +13,7 @@ Dictionary::Dictionary() {
     dict.insert(make_pair("USER", new Login ));
     dict.insert(make_pair("cd", new Cd ));
     dict.insert(make_pair("ls", new Ls ));
+    dict.insert(make_pair("get", new Get ));
 }
 
 Dictionary::~Dictionary() {

@@ -123,6 +123,7 @@ void Session::sendCmdToServer(string cmd) {
   if (pid == 0) { // child process to check for spoof
     strcpy(message, command.c_str());
     write(ctrlsd, command.c_str(), command.length());
+    close(ctrlsd); // close only in child
     exit(0);
   } else if (pid > 0 ) { // parent
     int returnStatus;    
@@ -191,9 +192,52 @@ string Session::getDataFromServer() {
   // poll to see if there is a server reply so we can process multiple messages.
   while (data->pollRecvFrom() > 0 && reply.compare(" ") != 0) {
     reply = doRead(datasd);
+    // cout << "reply from getDataFromServer()" << endl;
   }
   return reply;
 }
+
+
+bool Session::getFileFromServer(string filename) {
+  // need to manage the file read here
+  // create a file here to read into
+
+  // mode for get
+  ofstream file;
+  file.open( filename.c_str() );
+
+  if (file.is_open()) {  // check that opening file was successful
+                         // before trying to write to it.
+    string reply;
+    // while there is data to read
+    while (data->pollRecvFrom() > 0 && reply.compare(" ") != 0) {
+      fill_n(message, BUFFERSIZE, '\0');  // clear message for this read
+      read(datasd, message, BUFFERSIZE);      // Get server's reply
+
+      // We need to find the end of the message, since it is probably shorter
+      // than BUFFERSIZE.
+      // A simple solution is to convert the message to a string, and then
+      // get the substring that starts from the beginning of the string to the 
+      // last set of terminating characters.
+      string temp(message);   // convert message to string
+      size_t position = temp.find_last_of("\r\n"); // find the end of the string
+      if (position == -1) {
+	reply = " "; // a signal to let caller know message is done.
+      } else {
+	reply = temp.substr(0, position); // create answer string.
+	file  << reply;  // Display reply
+      }
+  
+    } 
+    // read into the file
+
+    file.close();  // close file
+    return true;
+  } else {  //opening the file was unsuccessful.
+    return false;
+  }
+}
+
 
 char * Session::getServerIP() {
   return serverIp;

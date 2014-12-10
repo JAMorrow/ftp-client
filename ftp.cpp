@@ -63,13 +63,11 @@ int main(int argc, char** argv) {
 
     cout << "ftp> ";
     getline(cin, input);
-    cout << input;
 
     // get the cmd part of input
     string command = input;
     Command* cmd = dict.lookup(input.substr(0, command.find_first_of(" ")));
 
-    cout << input << endl;
     if (cmd != NULL) {
       cmd->execute(&session, input);
     } else {

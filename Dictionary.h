@@ -14,6 +14,7 @@
 #include "user_commands/Login.h"
 #include "user_commands/Cd.h"
 #include "user_commands/Ls.h"
+#include "user_commands/Get.h"
 
 class Dictionary
 {

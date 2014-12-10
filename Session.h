@@ -10,6 +10,8 @@
 
 #include <cstring>
 #include <string>
+#include <iostream>
+#include <fstream>
 
 #include "utilities/Socket.h"
 #include <stdlib.h>
@@ -18,7 +20,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <poll.h>  // to poll socket
- 
+
+
 #define BUFFERSIZE 1500
 
 class Session {
@@ -52,6 +55,8 @@ public:
   void teardownDataSocket();
 
   std::string getDataFromServer();
+
+  bool getFileFromServer(std::string);
 
   char * getServerIP();
 
