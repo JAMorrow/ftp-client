@@ -14,6 +14,7 @@ Dictionary::Dictionary() {
     dict.insert(make_pair("cd", new Cd ));
     dict.insert(make_pair("ls", new Ls ));
     dict.insert(make_pair("get", new Get ));
+    dict.insert(make_pair("put", new Put ));
 }
 
 Dictionary::~Dictionary() {

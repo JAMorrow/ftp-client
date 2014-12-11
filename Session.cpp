@@ -198,9 +198,11 @@ string Session::getDataFromServer() {
 }
 
 
-bool Session::getFileFromServer(string filename) {
+bool Session::getFileFromServer(string fn) {
   // need to manage the file read here
   // create a file here to read into
+
+  string filename = fn.substr(1); // get rid of leading ' '
 
   // mode for get
   ofstream file;
@@ -208,9 +210,10 @@ bool Session::getFileFromServer(string filename) {
 
   if (file.is_open()) {  // check that opening file was successful
                          // before trying to write to it.
-    string reply;
+    string reply = " ";
     // while there is data to read
-    while (data->pollRecvFrom() > 0 && reply.compare(" ") != 0) {
+    while (data->pollRecvFrom() > 0 && reply.compare("") != 0) {
+      //cout << "reading file ";
       fill_n(message, BUFFERSIZE, '\0');  // clear message for this read
       read(datasd, message, BUFFERSIZE);      // Get server's reply
 
@@ -222,9 +225,12 @@ bool Session::getFileFromServer(string filename) {
       string temp(message);   // convert message to string
       size_t position = temp.find_last_of("\r\n"); // find the end of the string
       if (position == -1) {
-	reply = " "; // a signal to let caller know message is done.
+	reply = temp; // a signal to let caller know message is done.
+        //cout << reply;
+        file << reply;
       } else {
 	reply = temp.substr(0, position); // create answer string.
+        //cout << reply;
 	file  << reply;  // Display reply
       }
   
@@ -238,6 +244,62 @@ bool Session::getFileFromServer(string filename) {
   }
 }
 
+bool Session::sendFileToServer(string local, string remote) {
+ 
+  // open the local file to read out of
+  ifstream localfile;
+  localfile.open( local.c_str(), ios::binary | ios::ate);
+  int arraysize = sizeof(char) * localfile.tellg();
+  localfile.close();
+
+  localfile.open( local.c_str(), ios::binary | ios::in);
+
+
+  if (localfile.is_open()) {  // check that opening file was successful
+                              // before trying to read from it
+
+    char * file; // dynamically allocated array file.
+    // allocate file to be size of localfile.
+   
+    cout << "DEBUG: array size = " << arraysize << endl;
+    file = (char *)malloc(arraysize); 
+    
+    if (file==NULL) {
+      cout << "Null pointer exception." << endl;
+    } else {
+
+      for (int i = 0; i < arraysize; i++) {
+	localfile.get(file[i]); // fill the file array.
+	// cout << i << " " << file[i] << " ";
+      }
+
+      //going to need to fork the data connection for write
+      //create a child to manage the data transfer.
+      pid_t pid = fork();
+      // let server know about the username.
+      if (pid == 0) { // child process
+	write(datasd, file, arraysize);
+	teardownDataSocket(); // destroy data socket now we're done
+	exit(0);
+      } else if (pid > 0 ) { // parent
+	// wait for child to finish
+	int returnStatus;    
+	waitpid(pid, &returnStatus, 0);
+      } else { // error in fork
+	cerr << "Fork error in Session!" << endl;
+      }  
+    }
+  
+    free(file);
+
+    cout << "DEBUG: DONE!" << endl;
+    // read into the file
+    localfile.close();  // close file
+    return true;
+  } else {  //opening the file was unsuccessful.
+    return false;
+  }
+}
 
 char * Session::getServerIP() {
   return serverIp;

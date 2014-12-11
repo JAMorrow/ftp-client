@@ -57,6 +57,7 @@ public:
   std::string getDataFromServer();
 
   bool getFileFromServer(std::string);
+  bool sendFileToServer(std::string, std::string);
 
   char * getServerIP();
 

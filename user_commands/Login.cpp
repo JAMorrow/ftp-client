@@ -14,10 +14,12 @@ int Login::execute(Session* session, string unused = "") {
   /* SEND USERNAME */
   string username;
   // print name prompt that includes user's computer info
-  // TODO get computer info
+  // TODO get computer info working again
 
-  string userString( getlogin() ); // gets the name of the user on this pc
-  cout << "Name (" << session->getServerIP() << ":" << userString << "): ";
+  // string userString( getlogin() ); // gets the name of the user on this pc
+  //cout << "Name (" << session->getServerIP() << ":" << userString << "): ";
+  cout << "Name (" << session->getServerIP() << "): ";
+
   cin >> username;
  
   if (!session->setUsername("USER " + username)) {

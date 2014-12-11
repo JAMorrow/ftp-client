@@ -27,6 +27,10 @@ int Get::execute(Session* session, string fn = "") {
   // session->dataport now refers to where the server is listening to the
   // data connection.
 
+
+  // tell server to enter binary mode for write
+  session->sendCmdToServer("TYPE I");
+
   // create a child to manage the data transfer.
   pid_t pid = fork();
   // let server know about the username.
@@ -44,6 +48,9 @@ int Get::execute(Session* session, string fn = "") {
     cerr << "Fork error in Session!" << endl;
   }
   session->teardownDataSocket(); // destroy data socket in parent now we're done
+
+  // return to ASCII mode by default
+  session->sendCmdToServer("TYPE A");
   return 0;
 }
 
