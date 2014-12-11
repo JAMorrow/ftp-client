@@ -35,10 +35,10 @@ int Put::execute(Session* session, string unused = "") {
 
   session->sendFileToServer(localfile, remotefile);
 
-  cout << "PUT about to teardown data socket" << endl;
   session->teardownDataSocket(); // destroy data socket in parent now we're done
 
-  //session->sendCmdToServer("TYPE A"); // set mode back to ASCII
+  session->sendCmdToServer("TYPE A"); // set mode back to ASCII
+
   return 0;
 }
 

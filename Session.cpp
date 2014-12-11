@@ -151,6 +151,17 @@ string Session::getServerReply() {
 
 
 /**
+ * getServerReply Prints the current server reply to console and
+ * returns a string of the server message. Needed separate method
+ * since closing reply is only one message long always.
+ */
+string Session::getServerClosingReply() {
+  string reply;
+  reply = doRead(ctrlsd);
+  return reply;
+}
+
+/**
  * serverReplyEqualsCode
  * Compares code given by server to code entered by user.
  * @return true if a match, false if not.

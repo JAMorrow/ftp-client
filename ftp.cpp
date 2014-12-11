@@ -56,9 +56,9 @@ int main(int argc, char** argv) {
   /* COMMAND PHASE */
   
   string input;    // user input
-    cout << "";
-    getline(cin, input);
-  while (true) {
+  cout << "";
+  getline(cin, input);
+  while (input.compare("quit") != 0) {
     input.clear(); // make sure input is empty before reading in
 
     cout << "ftp> ";
@@ -68,8 +68,10 @@ int main(int argc, char** argv) {
     string command = input;
     Command* cmd = dict.lookup(input.substr(0, command.find_first_of(" ")));
 
-    if (cmd != NULL) {
+    if (cmd != NULL && (input.compare("quit") != 0) ) {
       cmd->execute(&session, input);
+    } else if (input.compare("quit") == 0) {
+      break;
     } else {
       cout << "Invalid command.\n";
     }

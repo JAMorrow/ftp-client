@@ -51,6 +51,7 @@ int Get::execute(Session* session, string fn = "") {
 
   // return to ASCII mode by default
   session->sendCmdToServer("TYPE A");
+
   return 0;
 }
 

@@ -46,6 +46,8 @@ public:
   std::string getServerReply(); // get the current server reply, display it,
                                 // and return it as a string
 
+  std::string getServerClosingReply();
+
   bool serverReplyEqualsCode(std::string, std::string); // checks if the
                                 // server's reply code matches the given code.
 

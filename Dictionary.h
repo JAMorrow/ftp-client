@@ -16,6 +16,7 @@
 #include "user_commands/Ls.h"
 #include "user_commands/Get.h"
 #include "user_commands/Put.h"
+#include "user_commands/Quit.h"
 
 class Dictionary
 {
